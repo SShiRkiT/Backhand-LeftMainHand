@@ -24,6 +24,12 @@ public class BackhandConfigClient {
     @Config.DefaultInt(0)
     public static int offhandHotbarSlotYOffset;
 
+    @Config.Comment("If set to true, the main hand item will be rendered in the left hand (like modern Minecraft's left-handed mode)."
+        + " The offhand item will be rendered in the right hand. This is purely cosmetic.")
+    @Config.DefaultBoolean(false)
+    @Config.Name("Left Handed Mode")
+    public static boolean LeftHandedMode;
+
     @Config.Comment("Tweaks when holding a torch in the offhand")
     @Config.Name("Offhand Torch Tweaks")
     public static TorchConfig torchConfig = new TorchConfig();

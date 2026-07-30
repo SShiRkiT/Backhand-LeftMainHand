@@ -22,12 +22,17 @@ import org.lwjgl.opengl.GL11;
 import xonin.backhand.api.core.BackhandUtils;
 import xonin.backhand.api.core.IBackhandPlayer;
 import xonin.backhand.compat.IOffhandRenderOptOut;
+import xonin.backhand.utils.BackhandConfigClient;
 
 public final class BackhandRenderHelper {
 
     public static final ItemRenderer itemRenderer = new ItemRenderer(Minecraft.getMinecraft());
     public static float firstPersonFrame;
 
+    /**
+     * Animate the offhand swing on the character model.
+     * When left-handed mode is active, this animates the RIGHT arm instead of the LEFT arm.
+     */
     @SuppressWarnings("SuspiciousNameCombination")
     public static void moveOffHandArm(Entity entity, ModelBiped biped, float frame) {
         if (entity instanceof IBackhandPlayer player && (player != Minecraft.getMinecraft().thePlayer
@@ -35,27 +40,53 @@ public final class BackhandRenderHelper {
             float offhandSwing = player.getOffSwingProgress(frame);
 
             if (offhandSwing > 0.0F) {
-                if (biped.bipedBody.rotateAngleY != 0.0F) {
-                    biped.bipedLeftArm.rotateAngleY -= biped.bipedBody.rotateAngleY;
-                    biped.bipedLeftArm.rotateAngleX -= biped.bipedBody.rotateAngleY;
-                }
-                biped.bipedBody.rotateAngleY = -MathHelper
-                    .sin(MathHelper.sqrt_float(offhandSwing) * (float) Math.PI * 2.0F) * 0.2F;
+                if (BackhandConfigClient.LeftHandedMode) {
+                    // Left-handed mode: animate the right arm for offhand swing
+                    if (biped.bipedBody.rotateAngleY != 0.0F) {
+                        biped.bipedRightArm.rotateAngleY -= biped.bipedBody.rotateAngleY;
+                        biped.bipedRightArm.rotateAngleX -= biped.bipedBody.rotateAngleY;
+                    }
+                    biped.bipedBody.rotateAngleY = MathHelper
+                        .sin(MathHelper.sqrt_float(offhandSwing) * (float) Math.PI * 2.0F) * 0.2F;
 
-                biped.bipedLeftArm.rotationPointZ = -MathHelper.sin(biped.bipedBody.rotateAngleY) * 5.0F;
-                biped.bipedLeftArm.rotationPointX = MathHelper.cos(biped.bipedBody.rotateAngleY) * 5.0F;
-                float f6 = 1.0F - offhandSwing;
-                f6 = 1.0F - f6 * f6 * f6;
-                double f8 = MathHelper.sin(f6 * (float) Math.PI) * 1.2D;
-                double f10 = MathHelper.sin(offhandSwing * (float) Math.PI) * -(biped.bipedHead.rotateAngleX - 0.7F)
-                    * 0.75F;
-                biped.bipedLeftArm.rotateAngleX -= f8 + f10;
-                biped.bipedLeftArm.rotateAngleY += biped.bipedBody.rotateAngleY * 3.0F;
-                biped.bipedLeftArm.rotateAngleZ = MathHelper.sin(offhandSwing * (float) Math.PI) * -0.4F;
+                    biped.bipedRightArm.rotationPointZ = -MathHelper.sin(biped.bipedBody.rotateAngleY) * 5.0F;
+                    biped.bipedRightArm.rotationPointX = -MathHelper.cos(biped.bipedBody.rotateAngleY) * 5.0F;
+                    float f6 = 1.0F - offhandSwing;
+                    f6 = 1.0F - f6 * f6 * f6;
+                    double f8 = MathHelper.sin(f6 * (float) Math.PI) * 1.2D;
+                    double f10 = MathHelper.sin(offhandSwing * (float) Math.PI) * -(biped.bipedHead.rotateAngleX - 0.7F)
+                        * 0.75F;
+                    biped.bipedRightArm.rotateAngleX -= f8 + f10;
+                    biped.bipedRightArm.rotateAngleY += biped.bipedBody.rotateAngleY * 3.0F;
+                    biped.bipedRightArm.rotateAngleZ = MathHelper.sin(offhandSwing * (float) Math.PI) * 0.4F;
+                } else {
+                    // Default: animate the left arm for offhand swing
+                    if (biped.bipedBody.rotateAngleY != 0.0F) {
+                        biped.bipedLeftArm.rotateAngleY -= biped.bipedBody.rotateAngleY;
+                        biped.bipedLeftArm.rotateAngleX -= biped.bipedBody.rotateAngleY;
+                    }
+                    biped.bipedBody.rotateAngleY = -MathHelper
+                        .sin(MathHelper.sqrt_float(offhandSwing) * (float) Math.PI * 2.0F) * 0.2F;
+
+                    biped.bipedLeftArm.rotationPointZ = -MathHelper.sin(biped.bipedBody.rotateAngleY) * 5.0F;
+                    biped.bipedLeftArm.rotationPointX = MathHelper.cos(biped.bipedBody.rotateAngleY) * 5.0F;
+                    float f6 = 1.0F - offhandSwing;
+                    f6 = 1.0F - f6 * f6 * f6;
+                    double f8 = MathHelper.sin(f6 * (float) Math.PI) * 1.2D;
+                    double f10 = MathHelper.sin(offhandSwing * (float) Math.PI) * -(biped.bipedHead.rotateAngleX - 0.7F)
+                        * 0.75F;
+                    biped.bipedLeftArm.rotateAngleX -= f8 + f10;
+                    biped.bipedLeftArm.rotateAngleY += biped.bipedBody.rotateAngleY * 3.0F;
+                    biped.bipedLeftArm.rotateAngleZ = MathHelper.sin(offhandSwing * (float) Math.PI) * -0.4F;
+                }
             }
         }
     }
 
+    /**
+     * Render the offhand item in third person view.
+     * When left-handed mode is active, renders on the RIGHT arm instead of the LEFT arm.
+     */
     public static void renderOffhandItemIn3rdPerson(EntityPlayer player, ModelBiped modelBipedMain, float frame) {
         ItemStack offhandItem = BackhandUtils.getOffhandItem(player);
         float f2;
@@ -63,18 +94,34 @@ public final class BackhandRenderHelper {
 
         if (offhandItem != null) {
             GL11.glPushMatrix();
-            modelBipedMain.bipedLeftArm.postRender(0.0625F);
-            GL11.glTranslatef(
-                -modelBipedMain.bipedLeftArm.rotationPointX * 0.0625F,
-                -modelBipedMain.bipedLeftArm.rotationPointY * 0.0625F,
-                -modelBipedMain.bipedLeftArm.rotationPointZ * 0.0625F);
-            GL11.glScalef(-1, 1, 1);
-            GL11.glTranslatef(
-                -modelBipedMain.bipedLeftArm.rotationPointX * 0.0625F,
-                modelBipedMain.bipedLeftArm.rotationPointY * 0.0625F,
-                -modelBipedMain.bipedLeftArm.rotationPointZ * 0.0625F);
 
-            GL11.glTranslatef(-0.0625F, 0.4375F, 0.0625F);
+            if (BackhandConfigClient.LeftHandedMode) {
+                // Left-handed mode: render offhand on RIGHT arm
+                modelBipedMain.bipedRightArm.postRender(0.0625F);
+                GL11.glTranslatef(
+                    -modelBipedMain.bipedRightArm.rotationPointX * 0.0625F,
+                    -modelBipedMain.bipedRightArm.rotationPointY * 0.0625F,
+                    -modelBipedMain.bipedRightArm.rotationPointZ * 0.0625F);
+                GL11.glScalef(-1, 1, 1);
+                GL11.glTranslatef(
+                    -modelBipedMain.bipedRightArm.rotationPointX * 0.0625F,
+                    modelBipedMain.bipedRightArm.rotationPointY * 0.0625F,
+                    -modelBipedMain.bipedRightArm.rotationPointZ * 0.0625F);
+                GL11.glTranslatef(-0.0625F, 0.4375F, 0.0625F);
+            } else {
+                // Default: render offhand on LEFT arm
+                modelBipedMain.bipedLeftArm.postRender(0.0625F);
+                GL11.glTranslatef(
+                    -modelBipedMain.bipedLeftArm.rotationPointX * 0.0625F,
+                    -modelBipedMain.bipedLeftArm.rotationPointY * 0.0625F,
+                    -modelBipedMain.bipedLeftArm.rotationPointZ * 0.0625F);
+                GL11.glScalef(-1, 1, 1);
+                GL11.glTranslatef(
+                    -modelBipedMain.bipedLeftArm.rotationPointX * 0.0625F,
+                    modelBipedMain.bipedLeftArm.rotationPointY * 0.0625F,
+                    -modelBipedMain.bipedLeftArm.rotationPointZ * 0.0625F);
+                GL11.glTranslatef(-0.0625F, 0.4375F, 0.0625F);
+            }
 
             GL11.glFrontFace(GL11.GL_CW);
 

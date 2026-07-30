@@ -127,38 +127,78 @@ public class ClientEventHandler {
     }
 
     /**
-     * Bend the models when the item in left hand is used
-     * And stop the right hand inappropriate bending
+     * Bend the models when the item in left hand is used.
+     * When in left-handed mode, swap which arm gets the held-item states.
+     * And stop the right hand inappropriate bending.
      */
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void renderPlayerLeftItemUsage(RenderLivingEvent.Pre event) {
         if (event.entity instanceof EntityPlayer entityPlayer) {
             ItemStack offhand = BackhandUtils.getOffhandItem(entityPlayer);
             if (offhand != null && event.renderer instanceof RenderPlayer renderer) {
-                if (renderer.modelBipedMain.heldItemLeft < 1) {
-                    renderer.modelArmorChestplate.heldItemLeft = renderer.modelArmor.heldItemLeft = renderer.modelBipedMain.heldItemLeft = 1;
-                }
-                if (entityPlayer.getItemInUseCount() > 0 && entityPlayer.getItemInUse() == offhand) {
-                    EnumAction enumaction = offhand.getItemUseAction();
-                    if (enumaction == EnumAction.block) {
-                        renderer.modelArmorChestplate.heldItemLeft = renderer.modelArmor.heldItemLeft = renderer.modelBipedMain.heldItemLeft = 3;
-                    } else if (enumaction == EnumAction.bow) {
-                        renderer.modelArmorChestplate.aimedBow = renderer.modelArmor.aimedBow = renderer.modelBipedMain.aimedBow = true;
+
+                if (BackhandConfigClient.LeftHandedMode) {
+                    // LEFT-HANDED MODE: Swap arm assignments
+                    // Main hand goes to LEFT arm, offhand goes to RIGHT arm
+
+                    // Offhand is now on the RIGHT arm
+                    if (renderer.modelBipedMain.heldItemRight < 1) {
+                        renderer.modelArmorChestplate.heldItemRight = renderer.modelArmor.heldItemRight = renderer.modelBipedMain.heldItemRight = 1;
                     }
+
+                    // Main hand is now on the LEFT arm
                     ItemStack mainhand = entityPlayer.inventory.getCurrentItem();
-                    renderer.modelArmorChestplate.heldItemRight = renderer.modelArmor.heldItemRight = renderer.modelBipedMain.heldItemRight = mainhand
-                        != null ? 1 : 0;
+                    if (mainhand != null) {
+                        renderer.modelArmorChestplate.heldItemLeft = renderer.modelArmor.heldItemLeft = renderer.modelBipedMain.heldItemLeft = 1;
+                    }
+
+                    if (entityPlayer.getItemInUseCount() > 0 && entityPlayer.getItemInUse() == offhand) {
+                        EnumAction enumaction = offhand.getItemUseAction();
+                        // Offhand is on the RIGHT arm in left-handed mode
+                        if (enumaction == EnumAction.block) {
+                            renderer.modelArmorChestplate.heldItemRight = renderer.modelArmor.heldItemRight = renderer.modelBipedMain.heldItemRight = 3;
+                        } else if (enumaction == EnumAction.bow) {
+                            renderer.modelArmorChestplate.aimedBow = renderer.modelArmor.aimedBow = renderer.modelBipedMain.aimedBow = true;
+                        }
+                        // Left arm shows main hand item (just held, not actively used)
+                        if (mainhand != null) {
+                            renderer.modelArmorChestplate.heldItemLeft = renderer.modelArmor.heldItemLeft = renderer.modelBipedMain.heldItemLeft = 1;
+                        }
+                    }
+                } else {
+                    // DEFAULT MODE: Original behavior
+                    if (renderer.modelBipedMain.heldItemLeft < 1) {
+                        renderer.modelArmorChestplate.heldItemLeft = renderer.modelArmor.heldItemLeft = renderer.modelBipedMain.heldItemLeft = 1;
+                    }
+                    if (entityPlayer.getItemInUseCount() > 0 && entityPlayer.getItemInUse() == offhand) {
+                        EnumAction enumaction = offhand.getItemUseAction();
+                        if (enumaction == EnumAction.block) {
+                            renderer.modelArmorChestplate.heldItemLeft = renderer.modelArmor.heldItemLeft = renderer.modelBipedMain.heldItemLeft = 3;
+                        } else if (enumaction == EnumAction.bow) {
+                            renderer.modelArmorChestplate.aimedBow = renderer.modelArmor.aimedBow = renderer.modelBipedMain.aimedBow = true;
+                        }
+                        ItemStack mainhand = entityPlayer.inventory.getCurrentItem();
+                        renderer.modelArmorChestplate.heldItemRight = renderer.modelArmor.heldItemRight = renderer.modelBipedMain.heldItemRight = mainhand
+                            != null ? 1 : 0;
+                    }
                 }
             }
         }
     }
 
     /**
-     * Reset models to default values
+     * Reset models to default values.
+     * When left-handed, the reset swaps arms: left arm shows main hand item, right arm shows offhand item.
      */
     @SubscribeEvent(priority = EventPriority.LOW)
     public static void resetPlayerLeftHand(RenderPlayerEvent.Post event) {
-        event.renderer.modelArmorChestplate.heldItemLeft = event.renderer.modelArmor.heldItemLeft = event.renderer.modelBipedMain.heldItemLeft = 0;
+        if (BackhandConfigClient.LeftHandedMode) {
+            // In left-handed mode: reset right (offhand) to 0, but left (main hand) may still have an item
+            event.renderer.modelArmorChestplate.heldItemRight = event.renderer.modelArmor.heldItemRight = event.renderer.modelBipedMain.heldItemRight = 0;
+            // Don't reset heldItemLeft here because it might be set by the vanilla renderer for the main hand
+        } else {
+            event.renderer.modelArmorChestplate.heldItemLeft = event.renderer.modelArmor.heldItemLeft = event.renderer.modelBipedMain.heldItemLeft = 0;
+        }
     }
 
     @SubscribeEvent

@@ -20,6 +20,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 
 import xonin.backhand.api.core.IBackhandPlayer;
 import xonin.backhand.client.utils.BackhandRenderHelper;
+import xonin.backhand.utils.BackhandConfigClient;
 
 @Mixin(ModelBiped.class)
 public abstract class MixinModelBiped extends ModelBase {
@@ -50,21 +51,40 @@ public abstract class MixinModelBiped extends ModelBase {
         if (original && entity instanceof EntityPlayer player
             && entity == Minecraft.getMinecraft().thePlayer
             && ((IBackhandPlayer) player).isOffhandItemInUse()) {
-            bipedLeftArm.rotateAngleZ = 0.0F;
-            bipedRightArm.rotateAngleZ = 0.0F;
-            bipedLeftArm.rotateAngleY = 0.1F + bipedHead.rotateAngleY;
-            bipedRightArm.rotateAngleY = -0.5F + bipedHead.rotateAngleY;
-            bipedLeftArm.rotateAngleX = -((float) Math.PI / 2F) + bipedHead.rotateAngleX;
-            bipedRightArm.rotateAngleX = -((float) Math.PI / 2F) + bipedHead.rotateAngleX;
-            bipedLeftArm.rotateAngleX -= 0.4F;
-            bipedRightArm.rotateAngleX -= 0.4F;
-            bipedLeftArm.rotateAngleZ -= MathHelper.cos(f3 * 0.09F) * 0.05F + 0.05F;
-            bipedRightArm.rotateAngleZ += MathHelper.cos(f3 * 0.09F) * 0.05F + 0.05F;
-            bipedLeftArm.rotateAngleX -= MathHelper.sin(f3 * 0.067F) * 0.05F;
-            bipedRightArm.rotateAngleX += MathHelper.sin(f3 * 0.067F) * 0.05F;
+
+            if (BackhandConfigClient.LeftHandedMode) {
+                // LEFT-HANDED MODE: Swap arm assignments for bow aiming
+                // The main hand (left arm) holds the bow
+                // The offhand (right arm) is the support arm
+                bipedRightArm.rotateAngleZ = 0.0F;
+                bipedLeftArm.rotateAngleZ = 0.0F;
+                bipedRightArm.rotateAngleY = -0.1F + bipedHead.rotateAngleY;
+                bipedLeftArm.rotateAngleY = 0.5F + bipedHead.rotateAngleY;
+                bipedRightArm.rotateAngleX = -((float) Math.PI / 2F) + bipedHead.rotateAngleX;
+                bipedLeftArm.rotateAngleX = -((float) Math.PI / 2F) + bipedHead.rotateAngleX;
+                bipedRightArm.rotateAngleX -= 0.4F;
+                bipedLeftArm.rotateAngleX -= 0.4F;
+                bipedRightArm.rotateAngleZ -= MathHelper.cos(f3 * 0.09F) * 0.05F + 0.05F;
+                bipedLeftArm.rotateAngleZ += MathHelper.cos(f3 * 0.09F) * 0.05F + 0.05F;
+                bipedRightArm.rotateAngleX -= MathHelper.sin(f3 * 0.067F) * 0.05F;
+                bipedLeftArm.rotateAngleX += MathHelper.sin(f3 * 0.067F) * 0.05F;
+            } else {
+                // DEFAULT MODE: Original behavior
+                bipedLeftArm.rotateAngleZ = 0.0F;
+                bipedRightArm.rotateAngleZ = 0.0F;
+                bipedLeftArm.rotateAngleY = 0.1F + bipedHead.rotateAngleY;
+                bipedRightArm.rotateAngleY = -0.5F + bipedHead.rotateAngleY;
+                bipedLeftArm.rotateAngleX = -((float) Math.PI / 2F) + bipedHead.rotateAngleX;
+                bipedRightArm.rotateAngleX = -((float) Math.PI / 2F) + bipedHead.rotateAngleX;
+                bipedLeftArm.rotateAngleX -= 0.4F;
+                bipedRightArm.rotateAngleX -= 0.4F;
+                bipedLeftArm.rotateAngleZ -= MathHelper.cos(f3 * 0.09F) * 0.05F + 0.05F;
+                bipedRightArm.rotateAngleZ += MathHelper.cos(f3 * 0.09F) * 0.05F + 0.05F;
+                bipedLeftArm.rotateAngleX -= MathHelper.sin(f3 * 0.067F) * 0.05F;
+                bipedRightArm.rotateAngleX += MathHelper.sin(f3 * 0.067F) * 0.05F;
+            }
             return false;
         }
         return original;
     }
-
 }
