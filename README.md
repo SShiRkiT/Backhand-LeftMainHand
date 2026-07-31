@@ -3,11 +3,11 @@
 > ⚠️ **本 Fork 修改内容 / What this fork does:**
 >
 > 在原版 Backhand 1.8.12 基础上添加了**左手主手模式**（类似现代 Minecraft 高版本的左手选项）。
-> 通过配置文件 `backhand/client.cfg` 中的 `LeftHandedMode = true` 开启后，
+> 通过配置文件 `backhand/client.cfg` 中的 `LeftHandedMode = true` 开启 ，或是直接在游戏内的mod搜索本mod并点击config中修改LeftHandedMode
 > 主手物品将渲染在屏幕左侧，副手物品渲染在屏幕右侧。
 >
 > Adds a **left-handed main hand mode** (similar to modern Minecraft's left-hand option), based on original Backhand 1.8.12.
-> Enable via `LeftHandedMode = true` in `config/backhand/client.cfg`.
+> Enable via `LeftHandedMode = true` in `config/backhand/client.cfg` or via in-game mod config `LeftHandedMode = true`
 > The main hand renders on the left side, offhand on the right.
 >
 > ---
@@ -21,7 +21,7 @@
 > | `1.8.12` | 基于原版 Backhand 1.8.12 修改 | **真实版本号**，用于开发 / PR / 新版 GTNH |
 > | `1.7.7` | 与 1.8.12 完全相同，仅版本号改为 1.7.7 | **伪装版本号**，用于 GTNH 2.8.4 旧整合包进服务器 |
 >
-> GTNH 2.8.4 的服务器要求 `backhand@[1.7.2,)`，不认 1.8.12。所以打包了一个版本号写死为 `1.7.7` 的 jar 来绕过检测。**两者代码完全一致。**
+> GTNH 2.8.4 的服务器要求 `backhand@[1.7.7,)`，不认 1.8.12。所以打包了一个版本号写死为 `1.7.7` 的 jar 来绕过检测。**两者代码完全一致。**
 >
 > Two versions are provided in the Release:
 > - `1.8.12` — Real version. For development / PR / newer GTNH versions.
