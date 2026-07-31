@@ -24,45 +24,40 @@ public abstract class MixinItemRenderer {
 
     /**
      * In left-handed mode, mirror the main hand rendering to appear on the left side.
-     * Only applies when rendering to the MAIN framebuffer (FBO 0).
-     * Shader mods call this method during offscreen passes (gbuffer, shadow map,
-     * translucent) — we must NOT modify GL state in those passes, or the
-     * corrupted offscreen buffers will cause GUI flickering and missing items.
+     * Critically, save/restore the active matrix mode so that shader mods which
+     * change glMatrixMode during transparent-item rendering don't cause our
+     * glPushMatrix/glPopMatrix to operate on the wrong stack.
      */
     @Inject(method = "renderItemInFirstPerson", at = @At("HEAD"))
     private void backhand$preRenderItemInFirstPerson(float frame, CallbackInfo ci) {
         if (BackhandConfigClient.LeftHandedMode) {
             EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
             if (!BackhandUtils.isUsingOffhand(player)) {
-                // Query the current framebuffer binding.
-                // 0 = default/main framebuffer (final display).
-                // Non-zero = offscreen buffer used by shader mods for
-                // shadow maps, gbuffer, or compositing passes.
-                // We only mirror when rendering to the main display.
-                int currentFBO = GL11.glGetInteger(0x8CA6); // GL_FRAMEBUFFER_BINDING
-                if (currentFBO != 0) {
-                    return; // Offscreen shader pass — leave GL state untouched
-                }
-
+                // Save current matrix mode in case a shader mod changed it
+                // (e.g. to PROJECTION or TEXTURE for translucent passes).
+                // 0x0BA0 = GL_MATRIX_MODE
+                int savedMatrixMode = GL11.glGetInteger(0x0BA0);
+                // Force MODELVIEW so glPushMatrix/glPopMatrix operate on
+                // the correct stack regardless of shader interference.
+                GL11.glMatrixMode(GL11.GL_MODELVIEW);
                 GL11.glPushMatrix();
-                // Mirror X-axis to move the hand from right side to left side
                 GL11.glScalef(-1.0F, 1.0F, 1.0F);
-                // glScalef(-1,1,1) inverts face winding, so disable culling
                 GL11.glDisable(GL11.GL_CULL_FACE);
                 backhand$mainHandMirrored = true;
+                backhand$savedMatrixMode = savedMatrixMode;
             }
         }
     }
 
-    /**
-     * Render the offhand item after the main hand is rendered.
-     * In left-handed mode, restore culling and pop the mirror matrix first.
-     */
     @Inject(method = "renderItemInFirstPerson", at = @At("RETURN"))
     private void backhand$renderItemInFirstPerson(float frame, CallbackInfo ci) {
         if (backhand$mainHandMirrored) {
             GL11.glEnable(GL11.GL_CULL_FACE);
+            // Ensure pop happens on MODELVIEW stack
+            GL11.glMatrixMode(GL11.GL_MODELVIEW);
             GL11.glPopMatrix();
+            // Restore whatever matrix mode was active before our push
+            GL11.glMatrixMode(backhand$savedMatrixMode);
             backhand$mainHandMirrored = false;
         }
 
@@ -95,9 +90,9 @@ public abstract class MixinItemRenderer {
         return ((IBackhandPlayer) player).isOffhandItemInUse() ? 0 : original;
     }
 
-    /**
-     * Tracks whether we pushed a mirror matrix for the main hand in left-handed mode.
-     */
     @Unique
     private boolean backhand$mainHandMirrored = false;
+
+    @Unique
+    private int backhand$savedMatrixMode = GL11.GL_MODELVIEW;
 }
