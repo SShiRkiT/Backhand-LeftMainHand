@@ -2,11 +2,11 @@
 
 > ⚠️ **本 Fork 修改内容 / What this fork does:**
 >
-> 在原版 Backhand 基础上添加了**左手主手模式**（类似现代 Minecraft 高版本的左手选项）。基于原版backhand的1.8.12版本
+> 在原版 Backhand 基础上添加了**左手主手模式**（类似现代 Minecraft 高版本的左手选项）。基于原版backhand的1.8.12版本。
 > 通过配置文件 `backhand/client.cfg` 中的 `LeftHandedMode = true` 开启后，
 > 主手物品将渲染在屏幕左侧，副手物品渲染在屏幕右侧。
 >
-> Adds a **left-handed main hand mode** (similar to modern Minecraft's left-hand option).Based on original version 1.8.12
+> Adds a **left-handed main hand mode** (similar to modern Minecraft's left-hand option).Based on original version 1.8.12. 
 > Enable via `LeftHandedMode = true` in `config/backhand/client.cfg`.
 > The main hand renders on the left side, offhand on the right.
 >
