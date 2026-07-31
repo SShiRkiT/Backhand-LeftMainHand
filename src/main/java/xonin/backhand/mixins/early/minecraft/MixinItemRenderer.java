@@ -24,25 +24,31 @@ public abstract class MixinItemRenderer {
 
     /**
      * In left-handed mode, mirror the main hand rendering to appear on the left side.
-     * Push a mirror matrix BEFORE the vanilla rendering, and fix face culling.
+     * Only applies when rendering to the MAIN framebuffer (FBO 0).
+     * Shader mods call this method during offscreen passes (gbuffer, shadow map,
+     * translucent) — we must NOT modify GL state in those passes, or the
+     * corrupted offscreen buffers will cause GUI flickering and missing items.
      */
     @Inject(method = "renderItemInFirstPerson", at = @At("HEAD"))
     private void backhand$preRenderItemInFirstPerson(float frame, CallbackInfo ci) {
         if (BackhandConfigClient.LeftHandedMode) {
             EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
-            // Only mirror main hand; offhand renders separately via ItemRendererHooks
             if (!BackhandUtils.isUsingOffhand(player)) {
-                // Save ALL GL state so shader passes between our push/pop
-                // are not corrupted. GL_ALL_ATTRIB_BITS covers polygon,
-                // matrix mode, blend, depth, and everything else.
-                GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+                // Query the current framebuffer binding.
+                // 0 = default/main framebuffer (final display).
+                // Non-zero = offscreen buffer used by shader mods for
+                // shadow maps, gbuffer, or compositing passes.
+                // We only mirror when rendering to the main display.
+                int currentFBO = GL11.glGetInteger(0x8CA6); // GL_FRAMEBUFFER_BINDING
+                if (currentFBO != 0) {
+                    return; // Offscreen shader pass — leave GL state untouched
+                }
+
                 GL11.glPushMatrix();
                 // Mirror X-axis to move the hand from right side to left side
                 GL11.glScalef(-1.0F, 1.0F, 1.0F);
-                // glScalef(-1,1,1) inverts vertex winding. Flip cull target
-                // instead of disabling culling, so transparent shader passes
-                // (glass items) still receive correct cull state.
-                GL11.glCullFace(GL11.GL_FRONT);
+                // glScalef(-1,1,1) inverts face winding, so disable culling
+                GL11.glDisable(GL11.GL_CULL_FACE);
                 backhand$mainHandMirrored = true;
             }
         }
@@ -50,14 +56,13 @@ public abstract class MixinItemRenderer {
 
     /**
      * Render the offhand item after the main hand is rendered.
-     * In left-handed mode, restore face culling and pop the mirror matrix first.
+     * In left-handed mode, restore culling and pop the mirror matrix first.
      */
     @Inject(method = "renderItemInFirstPerson", at = @At("RETURN"))
     private void backhand$renderItemInFirstPerson(float frame, CallbackInfo ci) {
         if (backhand$mainHandMirrored) {
+            GL11.glEnable(GL11.GL_CULL_FACE);
             GL11.glPopMatrix();
-            // Restore ALL GL state saved by glPushAttrib at HEAD.
-            GL11.glPopAttrib();
             backhand$mainHandMirrored = false;
         }
 
