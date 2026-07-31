@@ -35,10 +35,10 @@ public abstract class MixinItemRenderer {
                 GL11.glPushMatrix();
                 // Mirror X-axis to move the hand from right side to left side
                 GL11.glScalef(-1.0F, 1.0F, 1.0F);
-                // glScalef(-1,1,1) inverts face winding (CCW -> CW), so OpenGL
-                // would cull front faces and render back faces by default.
-                // Tell GL that clockwise is now front to restore correct culling.
-                GL11.glFrontFace(GL11.GL_CW);
+                // glScalef(-1,1,1) inverts face winding, so disable culling
+                // to prevent wrong face culling. This avoids shader mod
+                // state leaks that occur when using glFrontFace(GL_CW).
+                GL11.glDisable(GL11.GL_CULL_FACE);
                 backhand$mainHandMirrored = true;
             }
         }
@@ -51,7 +51,7 @@ public abstract class MixinItemRenderer {
     @Inject(method = "renderItemInFirstPerson", at = @At("RETURN"))
     private void backhand$renderItemInFirstPerson(float frame, CallbackInfo ci) {
         if (backhand$mainHandMirrored) {
-            GL11.glFrontFace(GL11.GL_CCW);
+            GL11.glEnable(GL11.GL_CULL_FACE);
             GL11.glPopMatrix();
             backhand$mainHandMirrored = false;
         }
