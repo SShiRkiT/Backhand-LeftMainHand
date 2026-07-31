@@ -32,13 +32,16 @@ public abstract class MixinItemRenderer {
             EntityClientPlayerMP player = Minecraft.getMinecraft().thePlayer;
             // Only mirror main hand; offhand renders separately via ItemRendererHooks
             if (!BackhandUtils.isUsingOffhand(player)) {
+                // Save all polygon state (cull face mode, front face direction, etc.)
+                // so shader passes between our push/pop are not corrupted.
+                GL11.glPushAttrib(GL11.GL_POLYGON_BIT);
                 GL11.glPushMatrix();
                 // Mirror X-axis to move the hand from right side to left side
                 GL11.glScalef(-1.0F, 1.0F, 1.0F);
-                // glScalef(-1,1,1) inverts face winding, so disable culling
-                // to prevent wrong face culling. This avoids shader mod
-                // state leaks that occur when using glFrontFace(GL_CW).
-                GL11.glDisable(GL11.GL_CULL_FACE);
+                // glScalef(-1,1,1) inverts vertex winding. Flip cull target
+                // instead of disabling culling, so transparent shader passes
+                // (glass items) still receive correct cull state.
+                GL11.glCullFace(GL11.GL_FRONT);
                 backhand$mainHandMirrored = true;
             }
         }
@@ -51,8 +54,10 @@ public abstract class MixinItemRenderer {
     @Inject(method = "renderItemInFirstPerson", at = @At("RETURN"))
     private void backhand$renderItemInFirstPerson(float frame, CallbackInfo ci) {
         if (backhand$mainHandMirrored) {
-            GL11.glEnable(GL11.GL_CULL_FACE);
             GL11.glPopMatrix();
+            // Restore all polygon state saved by glPushAttrib at HEAD,
+            // including original cull face, front face direction, etc.
+            GL11.glPopAttrib();
             backhand$mainHandMirrored = false;
         }
 
