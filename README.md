@@ -13,9 +13,9 @@
 >
 > ---
 >
-> 🤖 **完全由 AI 进行修改，仅保证 Backhand 1.7.7 在 GTNH 2.8.4 中的运行效果。不保证其他版本的可用性**
+> 🤖 **完全由 AI 进行修改，仅保证 Backhand 在 GTNH 2.8.4 中的运行效果。不保证其他版本的可用性**
 >
-> 🤖 **All modifications made entirely by AI. Only guaranteed to work with Backhand 1.8.12 on GTNH 2.8.4. Not guaranteed of availability for other versions**
+> 🤖 **All modifications made entirely by AI. Only guaranteed to work with Backhand on GTNH 2.8.4. Not guaranteed of availability for other versions**
 
 ---
 
