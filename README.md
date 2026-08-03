@@ -14,17 +14,20 @@
 >
 > ## ⚠️ 版本说明 / Version Note
 >
-> Release 中提供 **两个版本**：
+> Release 中提供 **三个版本**：
 >
 > | 版本号 | 实际代码 | 用途 |
 > |--------|----------|------|
 > | `1.8.12` | 基于原版 Backhand 1.8.12 修改 | **真实版本号**，用于开发 / PR / 新版 GTNH |
+> | `1.8.11` | 与 1.8.12 完全相同，仅版本号改为 1.8.11 | **伪装版本号**，用于 GTNH 2.9.0beta2 整合包进服务器 |
 > | `1.7.7` | 与 1.8.12 完全相同，仅版本号改为 1.7.7 | **伪装版本号**，用于 GTNH 2.8.4 旧整合包进服务器 |
 >
 > GTNH 2.8.4 的服务器要求 `backhand@[1.7.7,)`，不认 1.8.12。所以打包了一个版本号写死为 `1.7.7` 的 jar 来绕过检测。**两者代码完全一致。**
+> 1.8.11版本同上
 >
 > Two versions are provided in the Release:
 > - `1.8.12` — Real version. For development / PR / newer GTNH versions.
+> - - `1.8.11` — Fake version number (same code as 1.8.12). For GTNH 2.9.0beta2 servers that reject 1.8.12.
 > - `1.7.7` — Fake version number (same code as 1.8.12). For GTNH 2.8.4 servers that reject 1.8.12.
 >
 > ---
